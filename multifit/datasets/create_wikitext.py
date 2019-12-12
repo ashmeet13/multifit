@@ -30,11 +30,10 @@ def get_texts(root):
 
 def write_wikitext(file_path, text_iter, mt, num_tokens, mode='w'):
     total_num_tokens = 0
-    print(f'Writing to {file_path}...')
     i = 0
     with open(file_path, mode, encoding='utf-8') as f_out:
         for i, text in enumerate(text_iter):
-
+            if i%100000 == 0: print(i)
             num_tokens_article = 0  # count the number of tokens in an article
             tokenized_paragraphs = []
             paragraphs = text.split('\n')
@@ -60,7 +59,7 @@ def write_wikitext(file_path, text_iter, mt, num_tokens, mode='w'):
             total_num_tokens += num_tokens_article + 1
             if num_tokens is not None and total_num_tokens > num_tokens:
                 break
-            if i % 10000 == 0 and i > 0:
+            if i % 100000 == 0 and i > 0:
                 print('Processed {:,} documents. Total # tokens: {:,}.'.format(i, total_num_tokens))
     print('{}. # documents: {:,}. # tokens: {:,}.'.format(
         file_path, i, total_num_tokens))
@@ -98,7 +97,7 @@ def wiki2csv(file_path, text_iter, num_tokens):
             total_num_tokens += num_tokens_article + 1
             if num_tokens is not None and total_num_tokens > num_tokens:
                 break
-            if i % 10000 == 0 and i > 0:
+            if i % 100000 == 0 and i > 0:
                 print('Processed {:,} documents. Total # tokens: {:,}.'.format(i, total_num_tokens))
 
 
