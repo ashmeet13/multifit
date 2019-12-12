@@ -41,7 +41,7 @@ fi
 
 EXTR_PATH="${EXTR_DIR}/${LANG}"
 if [ ! -d "${EXTR_PATH}" ]; then
-  python3 wikiextractor/WikiExtractor.py -s --json -o "${EXTR_PATH}" "${DUMP_PATH}" --processes 4 -q
+  python3 wikiextractor/WikiExtractor.py -s --json -o "${EXTR_PATH}" "${DUMP_PATH}" -q
 else
   echo "${EXTR_PATH} already exists. Skipping extraction."
 fi
