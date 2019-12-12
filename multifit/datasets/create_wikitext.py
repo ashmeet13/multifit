@@ -8,15 +8,20 @@ import argparse
 from pathlib import Path
 import json
 import csv
-
+import os
 from shutil import copyfile
 
 from sacremoses import MosesTokenizer
 
 
 def get_texts(root):
-    for dir_ in root.iterdir():
-        for wiki_file in dir_.iterdir():
+    allTexts = []
+    dirs = sorted(os.listdir(str(root)))
+    for dir_ in dirs:
+        dir_ = os.path.join(root,dir_)
+        textfiles = sorted(os.listdir(dir_))
+        for wiki_file in textfiles:
+            wiki_file = os.path.join(dir_,wiki_file)
             with open(wiki_file, encoding='utf-8') as f_in:
                 for line in f_in:
                     article = json.loads(line)
@@ -25,7 +30,8 @@ def get_texts(root):
                     if text.strip() == title:
                         # print('No content continuing...')
                         continue
-                    yield text
+                    allTexts.append(text)
+    return allTexts
 
 
 def write_wikitext(file_path, text_iter, mt, num_tokens, mode='w'):
@@ -69,7 +75,6 @@ def wiki2csv(file_path, text_iter, num_tokens):
     total_num_tokens = 0
     print(f'Writing to {file_path}...')
     i = 0
-    
     with open(file_path, 'w', encoding='utf-8') as csvfile:
         f_out = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         for i, text in enumerate(text_iter):
@@ -118,7 +123,6 @@ def main(args):
     all_wiki.mkdir(exist_ok=True)
 
     text_iter = get_texts(input_path)
-
     splits = ['train', 'valid', 'test']
     token_nums = [2000000, 200000, 200000]
     for split, token_num in zip(splits, token_nums):
