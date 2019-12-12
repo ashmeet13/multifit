@@ -6,7 +6,7 @@ from fastai_contrib.text_data import MosesPreprocessingFunc, \
 
 def read_wiki_articles(filename):
     def istitle(line):
-        return len(re.findall(r'^ ?= [^=]* = ?$', line)) != 0
+        return line.startswith('Section')
     articles = []
     with open(filename, encoding='utf8') as f:
         lines = f.readlines()

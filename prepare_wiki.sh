@@ -35,19 +35,19 @@ fi
 if [ ! -d "${EXTR}" ]; then
   git clone https://github.com/attardi/wikiextractor.git
   cd "${EXTR}"
-  python setup.py install
+  python3 setup.py install
   cd ..
 fi
 
 EXTR_PATH="${EXTR_DIR}/${LANG}"
 if [ ! -d "${EXTR_PATH}" ]; then
-  python wikiextractor/WikiExtractor.py -s --json -o "${EXTR_PATH}" "${DUMP_PATH}" --processes 4 -q
+  python3 wikiextractor/WikiExtractor.py -s --json -o "${EXTR_PATH}" "${DUMP_PATH}" --processes 4 -q
 else
   echo "${EXTR_PATH} already exists. Skipping extraction."
 fi
 
-python -m multifit.datasets.create_wikitext -i "${EXTR_PATH}"  -l "${LANG}" -o "${WIKI_DIR}"
+python3 -m multifit.datasets.create_wikitext -i "${EXTR_PATH}"  -l "${LANG}" -o "${WIKI_DIR}"
 
-python -m multifit.datasets.postprocess_wikitext "${WIKI_DIR}/${LANG}-2" $LANG
-python -m multifit.datasets.postprocess_wikitext "${WIKI_DIR}/${LANG}-100" $LANG
+python3 -m multifit.datasets.postprocess_wikitext "${WIKI_DIR}/${LANG}-2" $LANG
+python3 -m multifit.datasets.postprocess_wikitext "${WIKI_DIR}/${LANG}-100" $LANG
 #python -m multifit.postprocess_wikitext "${WIKI_DIR}/${LANG}-all" $LANG
