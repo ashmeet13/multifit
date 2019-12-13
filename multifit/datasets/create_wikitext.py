@@ -15,13 +15,8 @@ from sacremoses import MosesTokenizer
 
 
 def get_texts(root):
-    allTexts = []
-    dirs = sorted(os.listdir(str(root)))
-    for dir_ in dirs:
-        dir_ = os.path.join(root,dir_)
-        textfiles = sorted(os.listdir(dir_))
-        for wiki_file in textfiles:
-            wiki_file = os.path.join(dir_,wiki_file)
+    for dir_ in root.iterdir():
+        for wiki_file in dir_.iterdir():
             with open(wiki_file, encoding='utf-8') as f_in:
                 for line in f_in:
                     article = json.loads(line)
@@ -30,8 +25,7 @@ def get_texts(root):
                     if text.strip() == title:
                         # print('No content continuing...')
                         continue
-                    allTexts.append(text)
-    return allTexts
+                    yield text
 
 
 def write_wikitext(file_path, text_iter, mt, num_tokens, mode='w'):
