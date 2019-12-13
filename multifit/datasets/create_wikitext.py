@@ -10,7 +10,7 @@ import json
 import csv
 import os
 from shutil import copyfile
-
+from collections import Counter
 from sacremoses import MosesTokenizer
 
 
@@ -27,6 +27,13 @@ def get_texts(root):
                         continue
                     yield text
 
+
+def countUnique(filePath):
+    cnt = Counter()
+    with open(filePath, 'r', encoding='utf-8') as reader:
+        for line in reader:
+            cnt.update(str(line).strip().split())
+    return len(cnt)
 
 def write_wikitext(file_path, text_iter, mt, num_tokens, mode='w'):
     total_num_tokens = 0
@@ -45,7 +52,6 @@ def write_wikitext(file_path, text_iter, mt, num_tokens, mode='w'):
                 tokens = tokenized.split(' ')  # split on whitespace to keep newlines
                 # don't count empty lines
                 tokens = [token for token in tokens if token]
-
                 # calculate length based on tokens; add 1 for newline
                 num_tokens_article += len(tokens) + 1
 
@@ -135,6 +141,13 @@ def main(args):
     all_wiki_train = all_wiki / f'{args.lang}.wiki.train.tokens'
     copyfile(lrg_wiki_train, all_wiki_train)
     write_wikitext(all_wiki_train, text_iter, mt,  None, mode='a')
+
+    wikipaths = [sml_wiki,lrg_wiki,all_wiki]
+    for wikipath in wikipaths:
+        for split in splits:
+            current_path = wikipath / f'{args.lang}.wiki.{split}.tokens'
+            total = countUnique(current_path)
+            print(f"Unique tokens {current_path} - {total}")
 
 # def main(args):
 #
