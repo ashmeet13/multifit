@@ -118,7 +118,7 @@ def main(args):
 
     text_iter = get_texts(input_path)
     splits = ['train', 'valid', 'test']
-    token_nums = [2000000, 200000, 200000]
+    token_nums = [3000000, 300000, 300000]
     for split, token_num in zip(splits, token_nums):
         sml_file_path = sml_wiki / f'{args.lang}.wiki.{split}.tokens'
         write_wikitext(sml_file_path, text_iter, mt, token_num)
