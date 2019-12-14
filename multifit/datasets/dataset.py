@@ -362,7 +362,7 @@ class ULMFiTTokenizer:
             sp_model=sp_model,
             sp_vocab=sp_vocab,
             lang=self.arch.lang,
-            hard_vocab = arch.hard_vocab,
+            hard_vocab = self.arch.hard_vocab,
             tmp_dir=self.pretrained_path.absolute()  # absolute make sure that dataset path is not added as prefix
         )
         return processor
