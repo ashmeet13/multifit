@@ -52,7 +52,7 @@ def findTotalTokens(root, mt):
                         tokenized = mt.tokenize(paragraph.strip())
                         token_count = len(tokenized) + 1
                         if token_count>=100:
-                            total+=lem(tokenized)
+                            total+=len(tokenized)
     return total
 
 
