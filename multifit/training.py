@@ -41,6 +41,7 @@ class ULMFiTArchitecture(Params):
     tokenizer_type: str = "f"
     max_vocab: int = 60000
     lang: str = None
+    hard_vocab = False
 
     emb_sz: int = awd_lstm_lm_config['emb_sz']
     n_hid: int = awd_lstm_lm_config['n_hid']
