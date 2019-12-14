@@ -8,9 +8,9 @@ import argparse
 from pathlib import Path
 import json
 import csv
-
+import os
 from shutil import copyfile
-
+from collections import Counter
 from sacremoses import MosesTokenizer
 
 
@@ -28,13 +28,39 @@ def get_texts(root):
                     yield text
 
 
-def write_wikitext(file_path, text_iter, mt, num_tokens, mode='w'):
+def countUnique(filePath):
+    cnt = Counter()
+    with open(filePath, 'r', encoding='utf-8') as reader:
+        for line in reader:
+            cnt.update(str(line).strip().split())
+    return len(cnt)
+
+
+def findTotalTokens(root, mt):
+    total = 0
+    for dir_ in root.iterdir():
+        for wiki_file in dir_.iterdir():
+            with open(wiki_file, encoding='utf-8') as f_in:
+                for line in f_in:
+                    article = json.loads(line)
+                    text = article['text']
+                    title = article['title']
+                    if text.strip() == title:
+                        continue
+                    paragraphs = text.split('\n')
+                    for paragraph in paragraphs:
+                        tokenized = mt.tokenize(paragraph.strip())
+                        token_count = len(tokenized) + 1
+                        if token_count>=100:
+                            total+=lem(tokenized)
+    return total
+
+
+def write_wikitext(file_path, text_iter, mt, num_tokens, mode='w',all_tokens=False):
     total_num_tokens = 0
-    print(f'Writing to {file_path}...')
     i = 0
     with open(file_path, mode, encoding='utf-8') as f_out:
         for i, text in enumerate(text_iter):
-
             num_tokens_article = 0  # count the number of tokens in an article
             tokenized_paragraphs = []
             paragraphs = text.split('\n')
@@ -46,7 +72,6 @@ def write_wikitext(file_path, text_iter, mt, num_tokens, mode='w'):
                 tokens = tokenized.split(' ')  # split on whitespace to keep newlines
                 # don't count empty lines
                 tokens = [token for token in tokens if token]
-
                 # calculate length based on tokens; add 1 for newline
                 num_tokens_article += len(tokens) + 1
 
@@ -60,7 +85,7 @@ def write_wikitext(file_path, text_iter, mt, num_tokens, mode='w'):
             total_num_tokens += num_tokens_article + 1
             if num_tokens is not None and total_num_tokens > num_tokens:
                 break
-            if i % 10000 == 0 and i > 0:
+            if i % 100000 == 0 and i > 0:
                 print('Processed {:,} documents. Total # tokens: {:,}.'.format(i, total_num_tokens))
     print('{}. # documents: {:,}. # tokens: {:,}.'.format(
         file_path, i, total_num_tokens))
@@ -70,7 +95,6 @@ def wiki2csv(file_path, text_iter, num_tokens):
     total_num_tokens = 0
     print(f'Writing to {file_path}...')
     i = 0
-    
     with open(file_path, 'w', encoding='utf-8') as csvfile:
         f_out = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         for i, text in enumerate(text_iter):
@@ -98,12 +122,17 @@ def wiki2csv(file_path, text_iter, num_tokens):
             total_num_tokens += num_tokens_article + 1
             if num_tokens is not None and total_num_tokens > num_tokens:
                 break
-            if i % 10000 == 0 and i > 0:
+            if i % 100000 == 0 and i > 0:
                 print('Processed {:,} documents. Total # tokens: {:,}.'.format(i, total_num_tokens))
 
 
-def main(args):
+def get_splits(tokens_size, split):
+    split = int(len(tokens_size)*(split))
+    tokens_size = tokens_size - (2*split)
+    return [tokens_size, split, split]
 
+
+def main(args):
     input_path = Path(args.input)
     output = Path(args.output)
     assert input_path.exists(), f'Error: {input_path} does not exist.'
@@ -111,33 +140,55 @@ def main(args):
 
     mt = MosesTokenizer(args.lang)
 
-    sml_wiki = output / f'{args.lang}-2'
-    lrg_wiki = output / f'{args.lang}-100'
-    all_wiki = output / f'{args.lang}-all'
-    sml_wiki.mkdir(exist_ok=True)
-    lrg_wiki.mkdir(exist_ok=True)
-    all_wiki.mkdir(exist_ok=True)
+    tokens_size = args.tokens
+    if tokens_size is None:
+        tokens_size = findTotalTokens(input_path,mt)
 
+    token_nums = get_splits(tokens_size, 0.1)
     text_iter = get_texts(input_path)
+    
+    wiki_out = output / f'{args.lang}-all'
+    wiki_out.mkdir(exist_ok=True)
 
     splits = ['train', 'valid', 'test']
-    token_nums = [2000000, 200000, 200000]
+    
     for split, token_num in zip(splits, token_nums):
-        sml_file_path = sml_wiki / f'{args.lang}.wiki.{split}.tokens'
-        write_wikitext(sml_file_path, text_iter, mt, token_num)
-        lrg_file_path = lrg_wiki / f'{args.lang}.wiki.{split}.tokens'
-        all_file_path = all_wiki / f'{args.lang}.wiki.{split}.tokens'
-        # copy the content of the small file to the large file
-        print(f'Copying {sml_file_path} to {lrg_file_path} & {all_file_path}.')
-        copyfile(sml_file_path, lrg_file_path)
-        copyfile(sml_file_path, all_file_path)
+        wiki_path = wiki_out / f'{args.lang}.wiki.{split}.tokens'
+        write_wikitext(wiki_path, text_iter, mt, token_num)
 
-    # add the new articles to the existing ones
-    lrg_wiki_train = lrg_wiki / f'{args.lang}.wiki.train.tokens'
-    write_wikitext(lrg_wiki_train, text_iter, mt, 98000000, mode='a')
-    all_wiki_train = all_wiki / f'{args.lang}.wiki.train.tokens'
-    copyfile(lrg_wiki_train, all_wiki_train)
-    write_wikitext(all_wiki_train, text_iter, mt,  None, mode='a')
+    # sml_wiki = output / f'{args.lang}-2'
+    # lrg_wiki = output / f'{args.lang}-100'
+    # all_wiki = output / f'{args.lang}-all'
+    # sml_wiki.mkdir(exist_ok=True)
+    # lrg_wiki.mkdir(exist_ok=True)
+    # all_wiki.mkdir(exist_ok=True)
+
+    # text_iter = get_texts(input_path)
+    # splits = ['train', 'valid', 'test']
+    # token_nums = [3000000, 300000, 300000]
+    # for split, token_num in zip(splits, token_nums):
+    #     sml_file_path = sml_wiki / f'{args.lang}.wiki.{split}.tokens'
+    #     write_wikitext(sml_file_path, text_iter, mt, token_num)
+    #     lrg_file_path = lrg_wiki / f'{args.lang}.wiki.{split}.tokens'
+    #     all_file_path = all_wiki / f'{args.lang}.wiki.{split}.tokens'
+    #     # copy the content of the small file to the large file
+    #     print(f'Copying {sml_file_path} to {lrg_file_path} & {all_file_path}.')
+    #     copyfile(sml_file_path, lrg_file_path)
+    #     copyfile(sml_file_path, all_file_path)
+
+    # # add the new articles to the existing ones
+    # lrg_wiki_train = lrg_wiki / f'{args.lang}.wiki.train.tokens'
+    # write_wikitext(lrg_wiki_train, text_iter, mt, 98000000, mode='a')
+    # all_wiki_train = all_wiki / f'{args.lang}.wiki.train.tokens'
+    # copyfile(lrg_wiki_train, all_wiki_train)
+    # write_wikitext(all_wiki_train, text_iter, mt,  None, mode='a')
+
+    wikipaths = [sml_wiki,lrg_wiki,all_wiki]
+    for wikipath in wikipaths:
+        for split in splits:
+            current_path = wikipath / f'{args.lang}.wiki.{split}.tokens'
+            total = countUnique(current_path)
+            print(f"Unique tokens {current_path} - {total}")
 
 # def main(args):
 #
@@ -166,5 +217,8 @@ if __name__ == '__main__':
     parser.add_argument('-l', '--lang', required=True,
                         help='the iso code of the language of the Wikipedia '
                              'documents, e.g. en, fr, de, etc.')
+    parser.add_argument('-t', '--tokens', required=False, default=None,
+                        help='total tokens to be considered while building train,test,valid'
+                             '80% will be train, 10% will be test, 10% will be valid of the input')
     args = parser.parse_args()
     main(args)

@@ -48,6 +48,4 @@ fi
 
 python3 -m multifit.datasets.create_wikitext -i "${EXTR_PATH}"  -l "${LANG}" -o "${WIKI_DIR}"
 
-python3 -m multifit.datasets.postprocess_wikitext "${WIKI_DIR}/${LANG}-2" $LANG
-python3 -m multifit.datasets.postprocess_wikitext "${WIKI_DIR}/${LANG}-100" $LANG
-#python -m multifit.postprocess_wikitext "${WIKI_DIR}/${LANG}-all" $LANG
+python3 -m multifit.datasets.postprocess_wikitext "${WIKI_DIR}/${LANG}-all" $LANG

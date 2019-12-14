@@ -6,14 +6,15 @@ from fastai_contrib.text_data import MosesPreprocessingFunc, \
 
 def read_wiki_articles(filename):
     def istitle(line):
-        return len(re.findall(r'^ ?= [^=]* = ?$', line)) != 0
+        line = line.strip()
+        return line.startswith('=') or line.endswith('=')
     articles = []
     with open(filename, encoding='utf8') as f:
         lines = f.readlines()
     current_article = []
     for i, line in enumerate(lines):
         current_article.append(line)
-        if i < len(lines) - 2 and lines[i + 1].strip() == "" and istitle(lines[i + 2]):
+        if istitle(line):
             articles.append("".join(current_article))
             current_article = []
     articles.append("".join(current_article))
@@ -142,10 +143,23 @@ class Dataset:
     def _load_n_cache_supervised_data(self):
         if not self._trn_df is not None or not self._tst_df  is not None or not self._val_df is not None:
             trn_df = self.read_data(self.trn_path)
-            tst_df = self.read_data(self.tst_path)
+            tst_df = self.read_data(self.tst_path) if self.tst_path.exists() else None
             val_df = self.read_data(self.val_path) if self.val_path.exists() else None
 
-            if val_df is None:
+            if val_df is None and tst_df is None:
+                print("Validation set not found using 10% of trn")
+                split_len = max(int(len(trn_df) * 0.1), 2)
+                trn_len = len(trn_df) - split_len
+                trn_df, val_df = trn_df[:trn_len], trn_df[trn_len:]
+                print("Test set not found using 10% of trn")
+                trn_len = len(trn_df) - split_len
+                trn_df, tst_df = trn_df[:trn_len], trn_df[trn_len:]
+            elif tst_df is None:
+                print("Validation set not found using 10% of trn")
+                val_len = max(int(len(trn_df) * 0.1), 2)
+                trn_len = len(trn_df) - val_len
+                trn_df, val_df = trn_df[:trn_len], trn_df[trn_len:]
+            elif val_df is None:
                 print("Validation set not found using 10% of trn")
                 val_len = max(int(len(trn_df) * 0.1), 2)
                 trn_len = len(trn_df) - val_len
