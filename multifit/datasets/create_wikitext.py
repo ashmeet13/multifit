@@ -186,12 +186,10 @@ def main(args):
     # copyfile(lrg_wiki_train, all_wiki_train)
     # write_wikitext(all_wiki_train, text_iter, mt,  None, mode='a')
 
-    wikipaths = [sml_wiki,lrg_wiki,all_wiki]
-    for wikipath in wikipaths:
-        for split in splits:
-            current_path = wikipath / f'{args.lang}.wiki.{split}.tokens'
-            total = countUnique(current_path)
-            print(f"Unique tokens {current_path} - {total}")
+    for split in splits:
+        current_path = wiki_out / f'{args.lang}.wiki.{split}.tokens'
+        total = countUnique(current_path)
+        print(f"Unique tokens {current_path} - {total}")
 
 # def main(args):
 #
