@@ -127,7 +127,7 @@ def wiki2csv(file_path, text_iter, num_tokens):
 
 
 def get_splits(tokens_size, split):
-    split = int(len(tokens_size)*(split))
+    split = int(tokens_size*split)
     tokens_size = tokens_size - (2*split)
     return [tokens_size, split, split]
 
