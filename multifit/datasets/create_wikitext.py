@@ -143,6 +143,8 @@ def main(args):
     tokens_size = args.tokens
     if tokens_size is None:
         tokens_size = findTotalTokens(input_path,mt)
+    else:
+        tokens_size = int(tokens_size)
 
     token_nums = get_splits(tokens_size, 0.1)
     text_iter = get_texts(input_path)
