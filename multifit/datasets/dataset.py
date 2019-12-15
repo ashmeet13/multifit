@@ -6,15 +6,14 @@ from fastai_contrib.text_data import MosesPreprocessingFunc, \
 
 def read_wiki_articles(filename):
     def istitle(line):
-        line = line.strip()
-        return line.startswith('=') or line.endswith('=')
+        return len(re.findall(r'^ ?= [^=]* = ?$', line)) != 0
     articles = []
     with open(filename, encoding='utf8') as f:
         lines = f.readlines()
     current_article = []
     for i, line in enumerate(lines):
         current_article.append(line)
-        if istitle(line):
+        if i < len(lines) - 2 and lines[i + 1].strip() == "" and istitle(lines[i + 2]):
             articles.append("".join(current_article))
             current_article = []
     articles.append("".join(current_article))
