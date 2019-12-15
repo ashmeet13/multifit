@@ -81,9 +81,9 @@ def write_wikitext(file_path, text_iter, mt, num_tokens, mode='w',all_tokens=Fal
                 # only use articles that have at least 100 tokens
                 continue
 
+            f_out.write(f'= {title} =')
+            f_out.write('\n')
             for tokenized in tokenized_paragraphs:
-                f_out.write(f'= = {title} = =')
-                f_out.write('\n')
                 f_out.write(tokenized + '\n')
 
             total_num_tokens += num_tokens_article + 1
