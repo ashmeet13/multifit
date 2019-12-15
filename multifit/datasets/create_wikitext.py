@@ -25,7 +25,7 @@ def get_texts(root):
                     if text.strip() == title:
                         # print('No content continuing...')
                         continue
-                    yield title,text
+                    yield {'title':title,'text':text}
 
 
 def countUnique(filePath):
@@ -60,7 +60,9 @@ def write_wikitext(file_path, text_iter, mt, num_tokens, mode='w',all_tokens=Fal
     total_num_tokens = 0
     i = 0
     with open(file_path, mode, encoding='utf-8') as f_out:
-        for i, title, text in enumerate(text_iter):
+        for i, article in enumerate(text_iter):
+            text = article['text']
+            title = article['title']
             num_tokens_article = 0  # count the number of tokens in an article
             tokenized_paragraphs = []
             paragraphs = text.split('\n')
