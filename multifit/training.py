@@ -4,6 +4,8 @@ import torch
 import dataclasses
 from fastai.callbacks import CSVLogger, SaveModelCallback
 from fastai.text import *
+from fastai import *
+import fastai
 
 from multifit.datasets import ULMFiTDataset,ULMFiTTokenizer
 
@@ -221,10 +223,12 @@ class ULMFiTPretraining(ULMFiTTrainingCommand):
                         pretrained=False, clip=self.clip)
         trn_args.update(**additional_trn_args)
         print("Training args: ", trn_args, "config: ", config)
+        perplexity = Perplexity()
         learn = language_model_learner(data_lm,
                                        AWD_LSTM,
                                        config=config,
                                        model_dir=self.model_name,
+                                       metrics=[error_rate, accuracy, perplexity],
                                        **trn_args)
         learn = patch_learner(learn)
         # compared to standard Adam, we set beta_1 to 0.8
@@ -374,6 +378,7 @@ class ULMFiTClassifier(ULMFiTTrainingCommand):
 
         trn_args.update(**additional_trn_args)
         print("Training args: ", trn_args, "config: ", config)
+        perplexity = Perplexity()
         learn = text_classifier_learner(data_clas,
                                         AWD_LSTM,
                                         config=config,
