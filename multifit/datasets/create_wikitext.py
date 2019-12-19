@@ -217,7 +217,7 @@ def main(args):
     print(f"Using Splits - Train: {token_nums[0]}, Valid: {token_nums[1]}, Test: {token_nums[2]}")
 
     for split, token_num in zip(splits, token_nums):
-        wiki_path = wiki_out / f'{args.lang}.wiki.{split}.tokens.csv'
+        wiki_path = wiki_out / f'{args.lang}.wiki.{split}.tokens'
         write_wikitext(wiki_path, text_iter, mt, token_num)
         print()
 

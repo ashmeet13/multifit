@@ -66,20 +66,18 @@ class Dataset:
     tst_name: Path = 'test.csv'
     unsup_name: Path = 'unsup.csv'
 
-    use_csv = False
 
     def __post_init__(self):
         self.add_trn_to_lm = True
         self._trn_df = None
         self._tst_df = None
         self._val_df = None
-
         path = str(self.dataset_path)
-        if 'wiki' in path and len(list(self.dataset_path.glob('*.wiki.*.tokens'))) >= 2 and not self.use_csv:
+        if 'wiki' in path and len(list(self.dataset_path.glob('*.wiki.*.tokens'))) >= 2:
             self._post_init_tokenized_wiki()
-        elif 'wiki' in path and len(list(self.dataset_path.glob('wiki.*.tokens'))) >= 2 and not self.use_csv:
+        elif 'wiki' in path and len(list(self.dataset_path.glob('wiki.*.tokens'))) >= 2:
             self._post_init_tokenized_wiki(wiki103=True)
-        elif 'wiki' in path and len(list(self.dataset_path.glob('*.wiki.*.tokens.csv'))) >= 2 and self.use_csv:
+        elif 'wiki' in path and len(list(self.dataset_path.glob('*.wiki.*.tokens.csv'))) >= 2:
             self._post_init_tokenized_wiki_custom()
         elif 'reddit' in path:
             self._post_init_default_csv(
