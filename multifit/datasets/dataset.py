@@ -4,6 +4,8 @@ from fastai.text import *
 from fastai_contrib.text_data import MosesPreprocessingFunc, \
     make_data_bunch_from_df, SPProcessor2
 
+import pandas as pd
+
 def read_wiki_articles(filename):
     def istitle(line):
         return len(re.findall(r'^ ?= [^=]* = ?$', line)) != 0
@@ -17,6 +19,19 @@ def read_wiki_articles(filename):
             articles.append("".join(current_article))
             current_article = []
     articles.append("".join(current_article))
+    print(f"Wiki text was split to {len(articles)} articles")
+    df = pd.DataFrame({'0': np.zeros(len(articles)), 'texts': np.array(articles, dtype=np.object)})
+    if len(df.columns) == 1:
+        df.insert(0, 'label', 0)
+    return df
+
+
+def read_wiki_articles_custom(filename):
+    filename = str(filename)+'.csv'
+    if not os.path.exists(filename):
+        return None
+    raw_df = pd.read_csv(filename)
+    articles = raw_df['text'].to_list()
     print(f"Wiki text was split to {len(articles)} articles")
     df = pd.DataFrame({'0': np.zeros(len(articles)), 'texts': np.array(articles, dtype=np.object)})
     if len(df.columns) == 1:
@@ -62,6 +77,8 @@ class Dataset:
             self._post_init_tokenized_wiki()
         elif 'wiki' in path and len(list(self.dataset_path.glob('wiki.*.tokens'))) >= 2:
             self._post_init_tokenized_wiki(wiki103=True)
+        elif 'wiki' in path and len(list(self.dataset_path.glob('*.wiki.*.tokens.csv'))) >= 2:
+            self._post_init_tokenized_wiki()
         elif 'reddit' in path:
             self._post_init_default_csv(
                 lang='en',
@@ -121,7 +138,7 @@ class Dataset:
         self.add_trn_to_lm = True
         self.lang = self._language_from_dataset_path()
 
-        self.read_data = read_wiki_articles
+        self.read_data = read_wiki_articles_custom
         if wiki103:
             prefix=""
         else:
@@ -142,8 +159,8 @@ class Dataset:
     def _load_n_cache_supervised_data(self):
         if not self._trn_df is not None or not self._tst_df  is not None or not self._val_df is not None:
             trn_df = self.read_data(self.trn_path)
-            tst_df = self.read_data(self.tst_path) if self.tst_path.exists() else None
-            val_df = self.read_data(self.val_path) if self.val_path.exists() else None
+            tst_df = self.read_data(self.tst_path)
+            val_df = self.read_data(self.val_path)
 
             if val_df is None and tst_df is None:
                 print("Validation set not found using 10% of trn")

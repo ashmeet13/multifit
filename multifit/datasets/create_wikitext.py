@@ -12,7 +12,7 @@ import os
 from shutil import copyfile
 from collections import Counter
 from sacremoses import MosesTokenizer
-
+import pandas as pd
 
 def get_texts(root):
     for dir_ in root.iterdir():
@@ -25,7 +25,7 @@ def get_texts(root):
                     if text.strip() == title:
                         # print('No content continuing...')
                         continue
-                    yield {'title':title,'text':text}
+                    yield {'id':article['id'],'title':title,'text':text}
 
 
 def countUnique(filePath):
@@ -56,9 +56,62 @@ def findTotalTokens(root, mt):
     return total
 
 
+
+
+
+
+
+
+
+
+
+
+def write_wikitext_csv(file_path, text_iter, mt, num_tokens):
+    total_num_tokens = 0
+    i = 0
+    ids, titles, texts = [],[],[]
+    for i, article in enumerate(text_iter):
+        text = article['text']
+        num_tokens_article = 0
+        tokenized_paragraphs = []
+        paragraphs = text.split('\n')
+
+        for paragraph in paragraphs:
+            tokenized = mt.tokenize(paragraph.strip(), return_str=True)
+            tokenized_paragraphs.append(tokenized)
+            tokens = tokenized.split(' ')
+            tokens = [token for token in tokens if token]
+            num_tokens_article += len(tokens) + 1
+
+        if num_tokens_article < 100:
+            continue
+
+        ids.append(article['id'])
+        titles.append(article['title'])
+        texts.append("\n".join(paragraphs))
+
+        total_num_tokens += num_tokens_article + 1
+        if num_tokens is not None and total_num_tokens > num_tokens:
+            break
+    df = pd.DataFrame(data={'id':ids,'title':titles,'text':texts})
+    df.to_csv(file_path, index=False)
+
+    print('{}. # documents: {:,}. # tokens: {:,}.'.format(file_path, len(texts), total_num_tokens))
+
+
+
+
+
+
+
+
+
+
 def write_wikitext(file_path, text_iter, mt, num_tokens, mode='w',all_tokens=False):
     total_num_tokens = 0
     i = 0
+    count = 0
+    ids, titles, texts = [],[],[]
     with open(file_path, mode, encoding='utf-8') as f_out:
         for i, article in enumerate(text_iter):
             text = article['text']
@@ -86,13 +139,16 @@ def write_wikitext(file_path, text_iter, mt, num_tokens, mode='w',all_tokens=Fal
             for tokenized in tokenized_paragraphs:
                 f_out.write(tokenized + '\n')
 
+            ids.append(article['id'])
+            titles.append(article['title'])
+            texts.append("\n".join(paragraphs))   
+            count+=1
             total_num_tokens += num_tokens_article + 1
             if num_tokens is not None and total_num_tokens > num_tokens:
                 break
-            if i % 100000 == 0 and i > 0:
-                print('Processed {:,} documents. Total # tokens: {:,}.'.format(i, total_num_tokens))
-    print('{}. # documents: {:,}. # tokens: {:,}.'.format(
-        file_path, i, total_num_tokens))
+    df = pd.DataFrame(data={'id':ids,'title':titles,'text':texts})
+    df.to_csv(str(file_path)+'.csv', index=False)    
+    print('{}. # documents: {:,}. # tokens: {:,}.'.format(file_path, count, total_num_tokens))
 
 
 def wiki2csv(file_path, text_iter, num_tokens):
@@ -158,11 +214,11 @@ def main(args):
 
     splits = ['train', 'valid', 'test']
     
-    print(f"Using Splits - Train: {token_nums[0]},Valid: {token_nums[1]},Test: {token_nums[2]}")
+    print(f"Using Splits - Train: {token_nums[0]}, Valid: {token_nums[1]}, Test: {token_nums[2]}")
 
     for split, token_num in zip(splits, token_nums):
-        wiki_path = wiki_out / f'{args.lang}.wiki.{split}.tokens'
-        write_wikitext(wiki_path, text_iter, mt, token_num)
+        wiki_path = wiki_out / f'{args.lang}.wiki.{split}.tokens.csv'
+        write_wikitext_csv(wiki_path, text_iter, mt, token_num)
         print()
 
     # sml_wiki = output / f'{args.lang}-2'
@@ -192,10 +248,10 @@ def main(args):
     # copyfile(lrg_wiki_train, all_wiki_train)
     # write_wikitext(all_wiki_train, text_iter, mt,  None, mode='a')
 
-    for split in splits:
-        current_path = wiki_out / f'{args.lang}.wiki.{split}.tokens'
-        total = countUnique(current_path)
-        print(f"Unique tokens {current_path} - {total}")
+    # for split in splits:
+    #     current_path = wiki_out / f'{args.lang}.wiki.{split}.tokens'
+    #     total = countUnique(current_path)
+    #     print(f"Unique tokens {current_path} - {total}")
 
 # def main(args):
 #

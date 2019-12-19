@@ -214,7 +214,7 @@ class ULMFiTPretraining(ULMFiTTrainingCommand):
     fp16: bool = False
     lr: float = 5e-3
 
-    def get_learner(self, data_lm, **additional_trn_args):
+    def get_learner(self, data_lm, continue_pretrain=None, **additional_trn_args):
         config = awd_lstm_lm_config.copy()
         config.update(emb_sz=self.arch.emb_sz, n_hid=self.arch.n_hid, n_layers=self.arch.n_layers, qrnn=self.arch.qrnn,
                       **self.dropout_values)
@@ -230,6 +230,10 @@ class ULMFiTPretraining(ULMFiTTrainingCommand):
                                        model_dir=self.model_name,
                                        metrics=[error_rate, accuracy, perplexity],
                                        **trn_args)
+        print("------------------------",continue_pretrain)
+        if continue_pretrain is not None:
+            learn.load(continue_pretrain)
+
         learn = patch_learner(learn)
         # compared to standard Adam, we set beta_1 to 0.8
         if self.use_adam_08:
@@ -254,6 +258,7 @@ class ULMFiTPretraining(ULMFiTTrainingCommand):
         learn.fit_one_cycle(self.num_epochs, self.lr, (0.8, 0.7))
 
     def train_custom(self, dataset_or_path, tokenizer=None, set_vocab=None, continue_pretrain=None, **train_config):
+        print("HERE?")
         if self.arch.lang is None:
             lang = detect_lang_from_dataset_path(Path(dataset_or_path))
             if lang is None:
@@ -261,7 +266,8 @@ class ULMFiTPretraining(ULMFiTTrainingCommand):
                 lang = 'en'
             self.arch.lang = lang
         self.replace_(**train_config, _strict=True)
-        set_seed(self.seed, "LM weights seed")
+        if continue_pretrain is None:
+            set_seed(self.seed, "LM weights seed")
         if tokenizer is None:
             if hasattr(self, 'base'):
                 tokenizer = self.base.tokenizer
@@ -270,8 +276,7 @@ class ULMFiTPretraining(ULMFiTTrainingCommand):
 
         dataset = self._set_dataset_(dataset_or_path, tokenizer)
         learn = self.get_learner(data_lm=dataset.load_lm_databunch(bs=self.bs, bptt=self.bptt, set_vocab=set_vocab))
-        if continue_pretrain is not None:
-            learn.load(continue_pretrain)
+        
 
         experiment_path = learn.path / learn.model_dir
         print("Experiment", experiment_path)
