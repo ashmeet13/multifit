@@ -256,7 +256,6 @@ class ULMFiTDataset(Dataset):
         return data_cls
 
     def load_n_cache_databunch(self, name, bunch_class, data_loader, bs, **args):
-        print("This is name - ",name)
         bunch_path = self.cache_path / name
         databunch = None
         if bunch_path.exists():
@@ -274,7 +273,6 @@ class ULMFiTDataset(Dataset):
 
     def databunch_from_df(self, bunch_class, train_df, valid_df, **args):
         args.update(**self.tokenizer.get_fastai_config(dataset_uses_moses=self.uses_moses))  # TODO depends on the previous model
-        print(args)
         databunch = make_data_bunch_from_df(cls=bunch_class,
                                             path=self.cache_path,
                                             train_df=train_df,
@@ -354,11 +352,9 @@ class ULMFiTTokenizer:
         print(self.pretrained_path)
         sp_model = self.pretrained_path / 'spm.model'
         if not sp_model.is_file():
-            print("yesss")
             sp_model = None
         sp_vocab = self.pretrained_path / 'spm.vocab'
         if not sp_vocab.is_file():
-            print("yesss")
             sp_vocab = None
         processor = SPProcessor2(
             pre_rules=moses_preproc + defaults.text_pre_rules,
