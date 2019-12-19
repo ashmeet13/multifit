@@ -213,14 +213,16 @@ class ULMFiTDataset(Dataset):
         super().__post_init__()
         self._vocab = None
 
-    def load_lm_databunch(self, bs, bptt):
+    def load_lm_databunch(self, bs, bptt, set_vocab=None):
         lm_suffix = str(bptt) if bptt != 70 else ""
         lm_suffix += "" if self.use_tst_for_lm else "-notst"
+        args = dict(vocab=set_vocab)
         data_lm = self.load_n_cache_databunch(f"lm{lm_suffix}",
                                               bunch_class=TextLMDataBunch,
                                               data_loader=self.load_unsupervised_data,
                                               bptt=bptt,
-                                              bs=bs)
+                                              bs=bs,
+                                              **args)
 
         with (self.cache_path / "itos.pkl").open('wb') as f:
             pickle.dump(data_lm.vocab.itos, f)
@@ -254,6 +256,7 @@ class ULMFiTDataset(Dataset):
         return data_cls
 
     def load_n_cache_databunch(self, name, bunch_class, data_loader, bs, **args):
+        print("This is name - ",name)
         bunch_path = self.cache_path / name
         databunch = None
         if bunch_path.exists():
@@ -271,6 +274,7 @@ class ULMFiTDataset(Dataset):
 
     def databunch_from_df(self, bunch_class, train_df, valid_df, **args):
         args.update(**self.tokenizer.get_fastai_config(dataset_uses_moses=self.uses_moses))  # TODO depends on the previous model
+        print(args)
         databunch = make_data_bunch_from_df(cls=bunch_class,
                                             path=self.cache_path,
                                             train_df=train_df,
@@ -347,12 +351,14 @@ class ULMFiTTokenizer:
 
     def _get_processor_sentence_piece(self, ds_uses_moses):
         moses_preproc = [MosesPreprocessingFunc(self.arch.lang)] if not ds_uses_moses else []
-
+        print(self.pretrained_path)
         sp_model = self.pretrained_path / 'spm.model'
         if not sp_model.is_file():
+            print("yesss")
             sp_model = None
         sp_vocab = self.pretrained_path / 'spm.vocab'
         if not sp_vocab.is_file():
+            print("yesss")
             sp_vocab = None
         processor = SPProcessor2(
             pre_rules=moses_preproc + defaults.text_pre_rules,
