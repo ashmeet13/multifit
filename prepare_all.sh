@@ -9,7 +9,7 @@ echo "Saving data in ""$ROOT"
 
     # Iterate the string variable using for loop
     for LANG in $languages; do
-        echo $val
+        echo "Building ${LANG}"
 
     DUMP_DIR="${ROOT}/wiki_dumps"
     EXTR_DIR="${ROOT}/wiki_extr"
@@ -44,8 +44,6 @@ echo "Saving data in ""$ROOT"
     echo "${EXTR_PATH} already exists. Skipping extraction."
     fi
 
-    python3 -m multifit.datasets.create_wikitext -i "${EXTR_PATH}"  -l "${LANG}" -o "${WIKI_DIR}"
-
-    python3 -m multifit.datasets.postprocess_wikitext "${WIKI_DIR}/${LANG}-all" $LANG
+    python3 -m multifit.datasets.create_wikitext -i "${EXTR_PATH}"  -l "${LANG}" -o "${WIKI_DIR}" -t 2000000
      echo "---------------------------------------------------------------------------------------"
 done
