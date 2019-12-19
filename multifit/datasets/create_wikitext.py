@@ -218,7 +218,7 @@ def main(args):
 
     for split, token_num in zip(splits, token_nums):
         wiki_path = wiki_out / f'{args.lang}.wiki.{split}.tokens.csv'
-        write_wikitext_csv(wiki_path, text_iter, mt, token_num)
+        write_wikitext(wiki_path, text_iter, mt, token_num)
         print()
 
     # sml_wiki = output / f'{args.lang}-2'
@@ -248,10 +248,10 @@ def main(args):
     # copyfile(lrg_wiki_train, all_wiki_train)
     # write_wikitext(all_wiki_train, text_iter, mt,  None, mode='a')
 
-    # for split in splits:
-    #     current_path = wiki_out / f'{args.lang}.wiki.{split}.tokens'
-    #     total = countUnique(current_path)
-    #     print(f"Unique tokens {current_path} - {total}")
+    for split in splits:
+        current_path = wiki_out / f'{args.lang}.wiki.{split}.tokens'
+        total = countUnique(current_path)
+        print(f"Unique tokens {current_path} - {total}")
 
 # def main(args):
 #

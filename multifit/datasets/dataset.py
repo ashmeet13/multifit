@@ -66,6 +66,8 @@ class Dataset:
     tst_name: Path = 'test.csv'
     unsup_name: Path = 'unsup.csv'
 
+    use_csv = False
+
     def __post_init__(self):
         self.add_trn_to_lm = True
         self._trn_df = None
@@ -73,12 +75,12 @@ class Dataset:
         self._val_df = None
 
         path = str(self.dataset_path)
-        if 'wiki' in path and len(list(self.dataset_path.glob('*.wiki.*.tokens'))) >= 2:
+        if 'wiki' in path and len(list(self.dataset_path.glob('*.wiki.*.tokens'))) >= 2 and not self.use_csv:
             self._post_init_tokenized_wiki()
-        elif 'wiki' in path and len(list(self.dataset_path.glob('wiki.*.tokens'))) >= 2:
+        elif 'wiki' in path and len(list(self.dataset_path.glob('wiki.*.tokens'))) >= 2 and not self.use_csv:
             self._post_init_tokenized_wiki(wiki103=True)
-        elif 'wiki' in path and len(list(self.dataset_path.glob('*.wiki.*.tokens.csv'))) >= 2:
-            self._post_init_tokenized_wiki()
+        elif 'wiki' in path and len(list(self.dataset_path.glob('*.wiki.*.tokens.csv'))) >= 2 and self.use_csv:
+            self._post_init_tokenized_wiki_custom()
         elif 'reddit' in path:
             self._post_init_default_csv(
                 lang='en',
@@ -133,6 +135,23 @@ class Dataset:
         self.unsup_path = self.dataset_path / f'{prefix}unsup.csv'
 
     def _post_init_tokenized_wiki(self, wiki103=False):
+        self.uses_moses = True
+        self.use_tst_for_lm = False
+        self.add_trn_to_lm = True
+        self.lang = self._language_from_dataset_path()
+
+        self.read_data = read_wiki_articles
+        if wiki103:
+            prefix=""
+        else:
+            prefix=f"{self.lang}."
+
+        self.trn_path = self.dataset_path / f'{prefix}wiki.train.tokens'
+        self.val_path = self.dataset_path / f'{prefix}wiki.valid.tokens'
+        self.tst_path = self.dataset_path / f'{prefix}wiki.test.tokens'
+        self.unsup_path = self.dataset_path / f'{prefix}wiki.unsup.tokens'
+
+    def _post_init_tokenized_wiki_custom(self, wiki103=False):
         self.uses_moses = True
         self.use_tst_for_lm = False
         self.add_trn_to_lm = True
