@@ -25,7 +25,7 @@ def get_texts(root):
                     if text.strip() == title:
                         # print('No content continuing...')
                         continue
-                    yield {'id':article['id'],'title':title,'text':text}
+                    yield {'title':title,'text':text}
 
 
 def countUnique(filePath):
@@ -83,8 +83,6 @@ def write_wikitext(file_path, text_iter, mt, num_tokens, mode='w',all_tokens=Fal
                 # only use articles that have at least 100 tokens
                 continue
 
-            f_out.write(f'= {title.strip()} =')
-            f_out.write('\n')
             for tokenized in tokenized_paragraphs:
                 f_out.write(tokenized + '\n')
             count+=1
@@ -163,33 +161,6 @@ def main(args):
         wiki_path = wiki_out / f'{args.lang}.wiki.{split}.tokens'
         write_wikitext(wiki_path, text_iter, mt, token_num)
         print()
-
-    # sml_wiki = output / f'{args.lang}-2'
-    # lrg_wiki = output / f'{args.lang}-100'
-    # all_wiki = output / f'{args.lang}-all'
-    # sml_wiki.mkdir(exist_ok=True)
-    # lrg_wiki.mkdir(exist_ok=True)
-    # all_wiki.mkdir(exist_ok=True)
-
-    # text_iter = get_texts(input_path)
-    # splits = ['train', 'valid', 'test']
-    # token_nums = [3000000, 300000, 300000]
-    # for split, token_num in zip(splits, token_nums):
-    #     sml_file_path = sml_wiki / f'{args.lang}.wiki.{split}.tokens'
-    #     write_wikitext(sml_file_path, text_iter, mt, token_num)
-    #     lrg_file_path = lrg_wiki / f'{args.lang}.wiki.{split}.tokens'
-    #     all_file_path = all_wiki / f'{args.lang}.wiki.{split}.tokens'
-    #     # copy the content of the small file to the large file
-    #     print(f'Copying {sml_file_path} to {lrg_file_path} & {all_file_path}.')
-    #     copyfile(sml_file_path, lrg_file_path)
-    #     copyfile(sml_file_path, all_file_path)
-
-    # # add the new articles to the existing ones
-    # lrg_wiki_train = lrg_wiki / f'{args.lang}.wiki.train.tokens'
-    # write_wikitext(lrg_wiki_train, text_iter, mt, 98000000, mode='a')
-    # all_wiki_train = all_wiki / f'{args.lang}.wiki.train.tokens'
-    # copyfile(lrg_wiki_train, all_wiki_train)
-    # write_wikitext(all_wiki_train, text_iter, mt,  None, mode='a')
 
     for split in splits:
         current_path = wiki_out / f'{args.lang}.wiki.{split}.tokens'

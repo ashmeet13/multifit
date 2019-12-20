@@ -25,20 +25,6 @@ def read_wiki_articles(filename):
         df.insert(0, 'label', 0)
     return df
 
-
-def read_wiki_articles_custom(filename):
-    filename = str(filename)+'.csv'
-    if not os.path.exists(filename):
-        return None
-    raw_df = pd.read_csv(filename)
-    articles = raw_df['text'].to_list()
-    print(f"Wiki text was split to {len(articles)} articles")
-    df = pd.DataFrame({'0': np.zeros(len(articles)), 'texts': np.array(articles, dtype=np.object)})
-    if len(df.columns) == 1:
-        df.insert(0, 'label', 0)
-    return df
-
-
 def read_clas_csv(fn):
     df = pd.read_csv(fn, header=None).fillna("na")
     if len(df.columns) == 1:
