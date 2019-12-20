@@ -67,6 +67,7 @@ def findTotalTokens(root, mt):
 
 
 def write_wikitext_csv(file_path, text_iter, mt, num_tokens):
+    file_path = str(file_path) + '.csv'
     total_num_tokens = 0
     i = 0
     ids, titles, texts = [],[],[]
@@ -218,7 +219,7 @@ def main(args):
 
     for split, token_num in zip(splits, token_nums):
         wiki_path = wiki_out / f'{args.lang}.wiki.{split}.tokens'
-        write_wikitext(wiki_path, text_iter, mt, token_num)
+        write_wikitext_csv(wiki_path, text_iter, mt, token_num)
         print()
 
     # sml_wiki = output / f'{args.lang}-2'
@@ -248,24 +249,12 @@ def main(args):
     # copyfile(lrg_wiki_train, all_wiki_train)
     # write_wikitext(all_wiki_train, text_iter, mt,  None, mode='a')
 
-    for split in splits:
-        current_path = wiki_out / f'{args.lang}.wiki.{split}.tokens'
-        total = countUnique(current_path)
-        print(f"Unique tokens {current_path} - {total}")
+    # for split in splits:
+    #     current_path = wiki_out / f'{args.lang}.wiki.{split}.tokens'
+    #     total = countUnique(current_path)
+    #     print(f"Unique tokens {current_path} - {total}")
 
-# def main(args):
-#
-#     input_path = Path(args.input)
-#     output = Path(args.output)
-#     assert input_path.exists(), f'Error: {input_path} does not exist.'
-#     output.mkdir(exist_ok=True)
-#
-#     lrg_wiki = output / f'{args.lang}-100'
-#     lrg_wiki.mkdir(exist_ok=True)
-#
-#     text_iter = get_texts(input_path)
-#
-#     wiki2csv(lrg_wiki / "rawtexts.csv", text_iter, int(2e7))
+
 
 if __name__ == '__main__':
 
