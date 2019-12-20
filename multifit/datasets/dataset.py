@@ -4,20 +4,34 @@ from fastai.text import *
 from fastai_contrib.text_data import MosesPreprocessingFunc, \
     make_data_bunch_from_df, SPProcessor2
 
+import pandas as pd
+
 def read_wiki_articles(filename):
     def istitle(line):
-        line = line.strip()
-        return line.startswith('=') or line.endswith('=')
+        return len(re.findall(r'^ ?= [^=]* = ?$', line)) != 0
     articles = []
     with open(filename, encoding='utf8') as f:
         lines = f.readlines()
     current_article = []
     for i, line in enumerate(lines):
         current_article.append(line)
-        if istitle(line):
+        if i < len(lines) - 2 and lines[i + 1].strip() == "" and istitle(lines[i + 2]):
             articles.append("".join(current_article))
             current_article = []
     articles.append("".join(current_article))
+    print(f"Wiki text was split to {len(articles)} articles")
+    df = pd.DataFrame({'0': np.zeros(len(articles)), 'texts': np.array(articles, dtype=np.object)})
+    if len(df.columns) == 1:
+        df.insert(0, 'label', 0)
+    return df
+
+
+def read_wiki_articles_custom(filename):
+    filename = str(filename)+'.csv'
+    if not os.path.exists(filename):
+        return None
+    raw_df = pd.read_csv(filename)
+    articles = raw_df['text'].to_list()
     print(f"Wiki text was split to {len(articles)} articles")
     df = pd.DataFrame({'0': np.zeros(len(articles)), 'texts': np.array(articles, dtype=np.object)})
     if len(df.columns) == 1:
@@ -52,12 +66,12 @@ class Dataset:
     tst_name: Path = 'test.csv'
     unsup_name: Path = 'unsup.csv'
 
+
     def __post_init__(self):
         self.add_trn_to_lm = True
         self._trn_df = None
         self._tst_df = None
         self._val_df = None
-
         path = str(self.dataset_path)
         if 'wiki' in path and len(list(self.dataset_path.glob('*.wiki.*.tokens'))) >= 2:
             self._post_init_tokenized_wiki()
@@ -144,9 +158,22 @@ class Dataset:
         if not self._trn_df is not None or not self._tst_df  is not None or not self._val_df is not None:
             trn_df = self.read_data(self.trn_path)
             tst_df = self.read_data(self.tst_path)
-            val_df = self.read_data(self.val_path) if self.val_path.exists() else None
+            val_df = self.read_data(self.val_path)
 
-            if val_df is None:
+            if val_df is None and tst_df is None:
+                print("Validation set not found using 10% of trn")
+                split_len = max(int(len(trn_df) * 0.1), 2)
+                trn_len = len(trn_df) - split_len
+                trn_df, val_df = trn_df[:trn_len], trn_df[trn_len:]
+                print("Test set not found using 10% of trn")
+                trn_len = len(trn_df) - split_len
+                trn_df, tst_df = trn_df[:trn_len], trn_df[trn_len:]
+            elif tst_df is None:
+                print("Validation set not found using 10% of trn")
+                val_len = max(int(len(trn_df) * 0.1), 2)
+                trn_len = len(trn_df) - val_len
+                trn_df, val_df = trn_df[:trn_len], trn_df[trn_len:]
+            elif val_df is None:
                 print("Validation set not found using 10% of trn")
                 val_len = max(int(len(trn_df) * 0.1), 2)
                 trn_len = len(trn_df) - val_len
@@ -335,7 +362,6 @@ class ULMFiTTokenizer:
 
     def _get_processor_sentence_piece(self, ds_uses_moses):
         moses_preproc = [MosesPreprocessingFunc(self.arch.lang)] if not ds_uses_moses else []
-
         sp_model = self.pretrained_path / 'spm.model'
         if not sp_model.is_file():
             sp_model = None
@@ -349,6 +375,7 @@ class ULMFiTTokenizer:
             sp_model=sp_model,
             sp_vocab=sp_vocab,
             lang=self.arch.lang,
+            hard_vocab = self.arch.hard_vocab,
             tmp_dir=self.pretrained_path.absolute()  # absolute make sure that dataset path is not added as prefix
         )
         return processor

@@ -4,6 +4,8 @@ import torch
 import dataclasses
 from fastai.callbacks import CSVLogger, SaveModelCallback
 from fastai.text import *
+from fastai import *
+import fastai
 
 from multifit.datasets import ULMFiTDataset,ULMFiTTokenizer
 
@@ -41,6 +43,7 @@ class ULMFiTArchitecture(Params):
     tokenizer_type: str = "f"
     max_vocab: int = 60000
     lang: str = None
+    hard_vocab = False
 
     emb_sz: int = awd_lstm_lm_config['emb_sz']
     n_hid: int = awd_lstm_lm_config['n_hid']
@@ -220,11 +223,14 @@ class ULMFiTPretraining(ULMFiTTrainingCommand):
                         pretrained=False, clip=self.clip)
         trn_args.update(**additional_trn_args)
         print("Training args: ", trn_args, "config: ", config)
+        perplexity = Perplexity()
         learn = language_model_learner(data_lm,
                                        AWD_LSTM,
                                        config=config,
                                        model_dir=self.model_name,
+                                       metrics=[error_rate, accuracy, perplexity],
                                        **trn_args)
+
         learn = patch_learner(learn)
         # compared to standard Adam, we set beta_1 to 0.8
         if self.use_adam_08:
@@ -247,6 +253,40 @@ class ULMFiTPretraining(ULMFiTTrainingCommand):
         print("Training lm from random weights")
         learn.unfreeze()
         learn.fit_one_cycle(self.num_epochs, self.lr, (0.8, 0.7))
+
+    # def train_custom(self, dataset_or_path, tokenizer=None, set_vocab=None, continue_pretrain=None, **train_config):
+    #     print("HERE?")
+    #     if self.arch.lang is None:
+    #         lang = detect_lang_from_dataset_path(Path(dataset_or_path))
+    #         if lang is None:
+    #             warn("Unable to detect language from dataset path assuming English, use replace_(lang='??') change it.")
+    #             lang = 'en'
+    #         self.arch.lang = lang
+    #     self.replace_(**train_config, _strict=True)
+    #     if continue_pretrain is None:
+    #         set_seed(self.seed, "LM weights seed")
+    #     if tokenizer is None:
+    #         if hasattr(self, 'base'):
+    #             tokenizer = self.base.tokenizer
+    #         else:
+    #             tokenizer = self.arch.new_tokenizer()
+
+    #     dataset = self._set_dataset_(dataset_or_path, tokenizer)
+    #     learn = self.get_learner(data_lm=dataset.load_lm_databunch(bs=self.bs, bptt=self.bptt, set_vocab=set_vocab))
+        
+    #     experiment_path = learn.path / learn.model_dir
+    #     print("Experiment", experiment_path)
+    #     if self.num_epochs > 0:
+    #         self._fit_schedule(learn)
+
+    #     self.experiment_path = experiment_path
+    #     tokenizer.save(self.experiment_path, learn=learn)
+    #     learn.to_fp32()
+    #     learn.save_encoder(ENC_BEST)
+    #     learn.save(LM_BEST, with_opt=False)
+    #     learn.destroy()
+    #     self.save_paramters()
+    #     print("Language model saved to", self.experiment_path)
 
     def train_(self, dataset_or_path, tokenizer=None, **train_config):
         if self.arch.lang is None:
@@ -373,6 +413,7 @@ class ULMFiTClassifier(ULMFiTTrainingCommand):
 
         trn_args.update(**additional_trn_args)
         print("Training args: ", trn_args, "config: ", config)
+        perplexity = Perplexity()
         learn = text_classifier_learner(data_clas,
                                         AWD_LSTM,
                                         config=config,

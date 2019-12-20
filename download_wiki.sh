@@ -45,5 +45,3 @@ if [ ! -d "${EXTR_PATH}" ]; then
 else
   echo "${EXTR_PATH} already exists. Skipping extraction."
 fi
-
-python3 -m multifit.datasets.create_wikitext -i "${EXTR_PATH}"  -l "${LANG}" -o "${WIKI_DIR}"

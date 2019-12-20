@@ -55,7 +55,7 @@ full_char_coverage_langs = ["bg", "cs", "da", "de", "el", "en", "es", "et", "fi"
 
 def train_sentencepiece(texts:Collection[str], path:PathOrStr, pre_rules: ListRules=None, post_rules:ListRules=None,
     vocab_sz:int=None, max_vocab_sz:int=30000, model_type:str='unigram', max_sentence_len:int=20480, lang='en',
-    char_coverage=None, tmp_dir='tmp', enc='utf8'):
+    char_coverage=None, tmp_dir='tmp', enc='utf8',hard_vocab:bool=False):
     "Train a sentencepiece tokenizer on `texts` and save it in `path/tmp_dir`"
     from sentencepiece import SentencePieceTrainer
     cache_dir = Path(path)/tmp_dir
@@ -69,7 +69,7 @@ def train_sentencepiece(texts:Collection[str], path:PathOrStr, pre_rules: ListRu
         f"--character_coverage={ifnone(char_coverage, 0.99999 if lang in full_char_coverage_langs else 0.9998)}",
         f"--unk_id={len(defaults.text_spec_tok)} --pad_id=-1 --bos_id=-1 --eos_id=-1",
         f"--user_defined_symbols={','.join(spec_tokens)}",
-        f"--model_prefix={cache_dir/'spm'} --vocab_size={vocab_sz} --model_type={model_type} --hard_vocab_limit=false"]))
+        f"--model_prefix={cache_dir/'spm'} --vocab_size={vocab_sz} --model_type={model_type} --hard_vocab_limit={hard_vocab}"]))
     raw_text_path.unlink()
     return cache_dir
 
@@ -78,7 +78,7 @@ class SPProcessor(PreProcessor):
     def __init__(self, ds:ItemList=None, pre_rules: ListRules=None, post_rules:ListRules=None, vocab_sz:int=None,
                     max_vocab_sz:int=30000, model_type:str='unigram', max_sentence_len:int=20480, lang='en',
                     char_coverage=None, tmp_dir='tmp', mark_fields:bool=False, include_bos:bool=True,
-                    include_eos:bool=False, sp_model=None, sp_vocab=None, n_cpus:int=None, enc='utf8'):
+                    include_eos:bool=False, sp_model=None, sp_vocab=None, n_cpus:int=None, enc='utf8', hard_vocab:bool=False):
         try: from sentencepiece import SentencePieceTrainer,SentencePieceProcessor
         except ImportError:
             raise Exception('sentencepiece module is missing: run `pip install sentencepiece`')
@@ -87,7 +87,7 @@ class SPProcessor(PreProcessor):
         self.sp_model,self.sp_vocab,self.n_cpus = sp_model,sp_vocab,ifnone(n_cpus,defaults.cpus)
         self.train_func = partial(train_sentencepiece, pre_rules=pre_rules, post_rules=post_rules, vocab_sz=vocab_sz,
                 max_vocab_sz=max_vocab_sz, model_type=model_type, max_sentence_len=max_sentence_len, lang=lang,
-                char_coverage=char_coverage, tmp_dir=tmp_dir, enc=enc)
+                char_coverage=char_coverage, tmp_dir=tmp_dir, enc=enc, hard_vocab=hard_vocab)
 
     def process_one(self, item, join=True):
         if join: text = _join_texts([item], self.mark_fields, self.include_bos, self.include_eos)[0]
