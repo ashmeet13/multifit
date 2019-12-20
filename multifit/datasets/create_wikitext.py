@@ -89,7 +89,7 @@ def write_wikitext_csv(file_path, text_iter, mt, num_tokens):
 
         ids.append(article['id'])
         titles.append(article['title'])
-        texts.append("\n".join(paragraphs))
+        texts.append("\n".join(tokenized_paragraphs))
 
         total_num_tokens += num_tokens_article + 1
         if num_tokens is not None and total_num_tokens > num_tokens:
