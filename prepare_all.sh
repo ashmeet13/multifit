@@ -5,7 +5,7 @@
 ROOT="data"
 echo "Saving data in ""$ROOT"
 
-    languages="hi te ta ml bn ur ne"
+    languages="hi te ta ml bn ur ne ar"
 
     # Iterate the string variable using for loop
     for LANG in $languages; do
