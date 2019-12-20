@@ -95,7 +95,7 @@ def write_wikitext_csv(file_path, text_iter, mt, num_tokens):
         if num_tokens is not None and total_num_tokens > num_tokens:
             break
     df = pd.DataFrame(data={'id':ids,'title':titles,'text':texts})
-    df.to_csv(file_path, index=False)
+    df.to_csv(file_path, index=False, encoding='utf-8')
 
     print('{}. # documents: {:,}. # tokens: {:,}.'.format(file_path, len(texts), total_num_tokens))
 
@@ -148,7 +148,7 @@ def write_wikitext(file_path, text_iter, mt, num_tokens, mode='w',all_tokens=Fal
             if num_tokens is not None and total_num_tokens > num_tokens:
                 break
     df = pd.DataFrame(data={'id':ids,'title':titles,'text':texts})
-    df.to_csv(str(file_path)+'.csv', index=False)    
+    df.to_csv(str(file_path)+'.csv', index=False, encoding='utf-8')
     print('{}. # documents: {:,}. # tokens: {:,}.'.format(file_path, count, total_num_tokens))
 
 
