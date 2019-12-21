@@ -152,7 +152,7 @@ def main(args):
     token_nums = get_splits(tokens_size, 0.1)
     text_iter = get_texts(input_path)
     
-    wiki_out = output / f'{args.lang}-all'
+    wiki_out = output / f'{args.lang}'
     wiki_out.mkdir(exist_ok=True)
 
     splits = ['train', 'valid', 'test']
