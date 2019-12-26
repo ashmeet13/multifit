@@ -147,7 +147,7 @@ def main(args):
     default_token_size = findTotalTokens(input_path,mt)
     if tokens_size is None:
         tokens_size = default_token_size
-    elif tokens_size>default_token_size:
+    elif int(tokens_size)>default_token_size:
         print("----------------> Restricted Limit of available tokens")
         tokens_size = default_token_size
     else:
