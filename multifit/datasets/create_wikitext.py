@@ -151,7 +151,7 @@ def main(args):
         print("----------------> Restricted Limit of available tokens")
         tokens_size = default_token_size
     else:
-        tokens_size = max(int(tokens_size)
+        tokens_size = int(tokens_size)
 
     token_nums = get_splits(tokens_size, 0.1)
     text_iter = get_texts(input_path)
