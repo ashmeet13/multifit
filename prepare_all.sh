@@ -44,6 +44,6 @@ echo "Saving data in ""$ROOT"
     echo "${EXTR_PATH} already exists. Skipping extraction."
     fi
 
-    python3 -m multifit.datasets.create_wikitext -i "${EXTR_PATH}"  -l "${LANG}" -o "${WIKI_DIR}" -t 2500000
+    python3 -m multifit.datasets.create_wikitext -i "${EXTR_PATH}"  -l "${LANG}" -o "${WIKI_DIR}" -t 13000000
      echo "---------------------------------------------------------------------------------------"
 done

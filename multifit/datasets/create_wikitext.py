@@ -144,10 +144,14 @@ def main(args):
     mt = MosesTokenizer(args.lang)
 
     tokens_size = args.tokens
+    default_token_size = findTotalTokens(input_path,mt)
     if tokens_size is None:
-        tokens_size = findTotalTokens(input_path,mt)
+        tokens_size = default_token_size
+    elif tokens_size>default_token_size:
+        print("----------------> Restricted Limit of available tokens")
+        tokens_size = default_token_size
     else:
-        tokens_size = int(tokens_size)
+        tokens_size = max(int(tokens_size)
 
     token_nums = get_splits(tokens_size, 0.1)
     text_iter = get_texts(input_path)
